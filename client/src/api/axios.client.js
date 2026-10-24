@@ -2,7 +2,7 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const axiosClient = axios.create({
-  baseURL: 'http://localhost:7000/api/v1', // Replace with server IP / Domain
+  baseURL: 'https://grocify-app-elqd.onrender.com/api/v1', // Replace with server IP / Domain
   headers: {
     'Content-Type': 'application/json',
   },
