@@ -1,9 +1,7 @@
-import Razorpay from "razorpay";
-
-import { initializeApp, getApps, cert } from "firebase-admin/app"
-
 import dotenv from "dotenv";
-import nodemailer from "nodemailer"
+import Razorpay from "razorpay";
+import { initializeApp, getApps, cert } from "firebase-admin/app"
+import { BrevoClient } from '@getbrevo/brevo';
 
 dotenv.config(
   {
@@ -12,13 +10,11 @@ dotenv.config(
 )
 
 
-export const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.GMAIL_USER,
-    pass: process.env.APP_PASSWORD, // Use app password, not your regular password
-  },
-})
+
+
+export const brevo = new BrevoClient({ apiKey: process.env.SMTP_KEY});
+
+
 
 
 // export const resend = new Resend(`${process.env.RESEND_KEY}`);
