@@ -3,6 +3,7 @@ import { brevo } from "../config/services.js";
 
 export const sendOtpEmail = async (toEmail, otpCode) => {
   const senderEmail = process.env.BREVO_SENDER_EMAIL;
+  console.log("api key is",process.env.BREVO_API_KEY);
 
   if (!senderEmail) {
     throw new Error('BREVO_SENDER_EMAIL is not set');

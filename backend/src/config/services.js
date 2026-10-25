@@ -5,14 +5,28 @@ import { BrevoClient } from '@getbrevo/brevo';
 
 dotenv.config(
   {
-    path:"./.env"
+    path: "./.env"
   }
 )
 
+console.log("brevo", process.env.BREVO_API_KEY)
 
 
 
-export const brevo = new BrevoClient({ apiKey: process.env.SMTP_KEY});
+
+export const brevo = new BrevoClient(
+  {
+    headers: {
+      api_Key: process.env.BREVO_API_KEY
+
+    }
+  }
+
+
+
+
+
+);
 
 
 
