@@ -9,24 +9,17 @@ dotenv.config(
   }
 )
 
-console.log("brevo", process.env.BREVO_API_KEY)
 
 
 
 
-export const brevo = new BrevoClient(
-  {
-    headers: {
-      api_Key: process.env.BREVO_API_KEY
-
-    }
+export const getBrevoClient = () => {
+  const apiKey = process.env.BREVO_API_KEY;
+  if (!apiKey) {
+    throw new Error("BREVO_API_KEY is not set");
   }
-
-
-
-
-
-);
+  return new BrevoClient({ apiKey });
+};
 
 
 
