@@ -93,7 +93,8 @@ export const registercontroller = async (req, res) => {
 
 export const verifyOtp = async (req, res) => {
     try {
-        const { email, otp } = req.body;
+        
+        const {email,otp}=req.body;
 
         const cachedData = await redisclient.get(`Temp_user:${email}`);
        
@@ -117,7 +118,7 @@ export const verifyOtp = async (req, res) => {
             isVerified: true,
         });
 
-        await redisclient.del(`temp_user:${email}`);
+        await redisclient.del(`Temp_user:${email}`);
 
         const token = generatetoken(newUser.email, newUser._id, newUser.role);
 
@@ -146,6 +147,7 @@ export const verifyOtp = async (req, res) => {
     }
 
 }
+
 
 
 
@@ -198,3 +200,31 @@ export const logincontroller = async (req, res) => {
         )
     }
 };
+
+
+export const getCurrentuser=async(req,res)=>{
+    try {
+        const userdetails=req.user;
+        if(!userdetails){
+            return res.status(401).json(
+                {
+                    message:"User not found or user is not authenticate",
+                    success:false
+                }
+            )
+        }
+
+        return res.status(200).json(
+            {
+                message:"User fetched successfully",
+                success:true,
+                user:userdetails
+
+            }
+        )
+
+        
+    } catch (error) {
+        
+    }
+}

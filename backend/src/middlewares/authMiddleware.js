@@ -7,13 +7,8 @@ export const authenticateuser = async(req, res, next) => {
         let token = null;
 
 
-        if (req.cookies && req.cookies["token"]) {
-            token = req.cookies["token"];
-        }
-
-        if (!token) {
-            token = localStorage.getItem("token")
-        }
+        
+       
 
 
         if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
