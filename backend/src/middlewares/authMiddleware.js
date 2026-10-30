@@ -5,14 +5,9 @@ export const authenticateuser = async(req, res, next) => {
     try {
 
         let token = null;
-
-
-        
-       
-
-
         if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
             token = req.headers.authorization.split(' ')[1];
+            console.log("token in auth is",token)
         }
 
 
@@ -20,7 +15,7 @@ export const authenticateuser = async(req, res, next) => {
             return res.status(401).json(
                 {
                     message:"Authentication failed ! Please login",
-                    success:true
+                    success:false
                 }
             )
         }
