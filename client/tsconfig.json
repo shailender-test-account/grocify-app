@@ -17,5 +17,5 @@
     ".expo/types/**/*.ts",
     "expo-env.d.ts",
     "nativewind-env.d.ts"
-, "backend/src/config/redis.js", "src/app/index.jsx", "src/app/_layout.jsx"  ]
+, "backend/src/config/redis.js", "src/app/(auth)/index.jsx", "src/app/_layout.jsx"  ]
 }

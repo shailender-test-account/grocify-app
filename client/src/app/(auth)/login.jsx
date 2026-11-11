@@ -19,13 +19,18 @@ import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import COLORS from "../../constants/colors.js";
 import { useEffect, useRef, useState } from "react";
+import * as SecureStore from 'expo-secure-store';
+import { useDispatch } from 'react-redux';
 
 import axiosClient from "../../api/axios.client.js";
+import { setCredentials, clearCredentials } from "../../store/slices/userslice.js";
+
 // import { useAuthStore } from "../../store/authStore";
 
 const { width } = Dimensions.get("window");
 
 export default function Login() {
+    const Dispatch=useDispatch()
     const router = useRouter()
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -177,6 +182,14 @@ export default function Login() {
             const loginResponse = await axiosClient.post("/auth/login", formdata);
 
             if (loginResponse?.data?.success) {
+                await SecureStore.setItemAsync("accesstoken",loginResponse.data.token)
+                Dispatch(setCredentials(
+                    {
+                        user:loginResponse.data.user,
+                        token:loginResponse.data.token
+
+                    }
+                ))
                 showToast(
                     "success",
                     "Login successfully 🎉",

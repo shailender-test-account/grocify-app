@@ -1,4 +1,4 @@
-import { Color, Tabs } from "expo-router";
+import {Tabs} from "expo-router";
 
 import { Ionicons } from "@expo/vector-icons";
 import COLORS from "../../constants/colors";
@@ -29,12 +29,12 @@ export default function Tablayout() {
         >
 
             <Tabs.Screen
-                name="home"
+                name="index"
                 options={{
                     title: "Home",
-                    tabBarIcon: ({ color, size }) => {
+                    tabBarIcon: ({ color, size }) => (
                         <Ionicons name="home-outline" size={size} color={color} />
-                    }
+                    )
                 }}
             />
 
@@ -42,9 +42,9 @@ export default function Tablayout() {
                 name="categories"
                 options={{
                     title: "Categories",
-                    tabBarIcon: ({ color, size }) => {
+                    tabBarIcon: ({ color, size }) => (
                         <Ionicons name="apps" size={size} color={color} />
-                    }
+                    )
                 }}
             />
 
@@ -52,9 +52,9 @@ export default function Tablayout() {
                 name="play"
                 options={{
                     title: "Play",
-                    tabBarIcon: ({ color, size }) => {
+                    tabBarIcon: ({ color, size }) => (
                         <Ionicons name="play" size={size} color={color} />
-                    }
+                    )
                 }}
             />
 
@@ -62,9 +62,9 @@ export default function Tablayout() {
                 name="account"
                 options={{
                     title: "Account",
-                    tabBarIcon: ({ color, size }) => {
+                    tabBarIcon: ({ color, size }) => (
                         <Ionicons name="person" size={size} color={color} />
-                    }
+                    )
                 }}
             />
 
@@ -72,9 +72,9 @@ export default function Tablayout() {
                 name="cart"
                 options={{
                     title: "Cart",
-                    tabBarIcon: ({ color, size }) => {
+                    tabBarIcon: ({ color, size }) => (
                         <Ionicons name="cart" size={size} color={color} />
-                    }
+                    )
                 }}
             />
 

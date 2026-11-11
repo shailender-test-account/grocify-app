@@ -1,5 +1,5 @@
 import axios from 'axios';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as SecureStore from 'expo-secure-store';
 
 const axiosClient = axios.create({
   baseURL: 'https://grocify-app-elqd.onrender.com/api/v1', // Replace with server IP / Domain
@@ -9,7 +9,7 @@ const axiosClient = axios.create({
 });
 
 axiosClient.interceptors.request.use(async (config) => {
-  const token = await AsyncStorage.getItem('jwtToken');
+  const token = await SecureStore.getItemAsync('accesstoken');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }

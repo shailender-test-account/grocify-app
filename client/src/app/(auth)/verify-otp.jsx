@@ -15,7 +15,7 @@ import {
 import axiosClient from "../../api/axios.client.js";
 import * as SecureStore from 'expo-secure-store';
 import { useDispatch } from 'react-redux';
-import { setUser } from "../../store/slices/userslice.js";
+import { setCredentials} from "../../store/slices/userslice.js";
 
 const COLORS = {
   primary: "#4CAF50",
@@ -239,8 +239,13 @@ export default function OtpVerificationScreen({
       // Persist / pass along token + user
       // (hook this into AsyncStorage / your auth context as needed)
       const { token, user, message } = data;
-      await SecureStore.setItemAsync("token",token);
-      Dispatch(setUser(user));
+      await SecureStore.setItemAsync("accesstoken",token);
+      Dispatch(setCredentials(
+        {
+          user:user,
+          token:token
+        }
+      ));
 
 
 

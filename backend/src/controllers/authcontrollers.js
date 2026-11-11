@@ -42,7 +42,7 @@ export const registercontroller = async (req, res) => {
 
         const existinguser = await Usermodel.findOne({ email });
         if (existinguser) {
-            res.status(400).json(
+           return res.status(400).json(
                 {
                     message: "User already exist ! Please login",
                     success: false
@@ -60,7 +60,7 @@ export const registercontroller = async (req, res) => {
 
         // await send otp 
         await sendOtpEmail(email, otp);
-        res.status(200).json(
+        return res.status(200).json(
             {
                 message: "OTP sent successfully please check your email",
                 success: true
@@ -79,6 +79,7 @@ export const registercontroller = async (req, res) => {
 
 
     } catch (error) {
+        console.log(`error in sending opt is : ${error}`)
         return res.status(500).json(
             {
                 message: `Something wents wrong in send otp in resister:${error}`,
@@ -137,6 +138,7 @@ export const verifyOtp = async (req, res) => {
 
 
     } catch (error) {
+        console.log(`error in verify otp:${error}`)
         return res.status(500).json(
             {
                 message: `Something wents wrong:${error}`,
