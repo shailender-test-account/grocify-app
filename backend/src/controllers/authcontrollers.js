@@ -191,7 +191,7 @@ export const logincontroller = async (req, res) => {
         res.status(200).json({
             success: true,
             token,
-            user: { id: user._id, name: user.name, email: user.email, role: user.role },
+            user: { id: user._id, name: user.username, email: user.email, role: user.role },
         });
     } catch (error) {
         return res.status(500).json(

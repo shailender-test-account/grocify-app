@@ -21,16 +21,18 @@ import COLORS from "../../constants/colors.js";
 import { useEffect, useRef, useState } from "react";
 import * as SecureStore from 'expo-secure-store';
 import { useDispatch } from 'react-redux';
+import { useMutation } from "@tanstack/react-query";
 
-import axiosClient from "../../api/axios.client.js";
+
 import { setCredentials, clearCredentials } from "../../store/slices/userslice.js";
+import { loginUser } from "../../api/authservice.js";
 
 // import { useAuthStore } from "../../store/authStore";
 
 const { width } = Dimensions.get("window");
 
 export default function Login() {
-    const Dispatch=useDispatch()
+    const Dispatch = useDispatch()
     const router = useRouter()
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -38,17 +40,17 @@ export default function Login() {
     const [formdata, setFormdata] = useState({
         email: "",
         password: "",
-       
+
     });
 
     const [errors, setErrors] = useState({
-       
+
         email: "",
         password: "",
     });
 
     const errorAnim = {
-      
+
         email: useRef(new Animated.Value(0)).current,
         password: useRef(new Animated.Value(0)).current,
     };
@@ -161,32 +163,20 @@ export default function Login() {
         }
     };
 
-    // ---------- Signup ----------
-    const handelLogin = async () => {
-      
-        const isEmailValid = validateField("email", formdata.email);
-        const isPasswordValid = validateField("password", formdata.password);
 
-        if (!isEmailValid || !isPasswordValid) {
-            showToast(
-                "error",
-                "Missing details",
-                "Please fix the highlighted fields before continuing."
-            );
-            return;
-        }
+    // login mutaion function
 
-        try {
-            setLoading(true);
-
-            const loginResponse = await axiosClient.post("/auth/login", formdata);
-
-            if (loginResponse?.data?.success) {
-                await SecureStore.setItemAsync("accesstoken",loginResponse.data.token)
+    const loginMutation = useMutation({
+        mutationFn: loginUser,
+        onSuccess: (data) => {
+          
+            if (data?.success) {
+                SecureStore.setItemAsync("accesstoken", data?.token)
+              
                 Dispatch(setCredentials(
                     {
-                        user:loginResponse.data.user,
-                        token:loginResponse.data.token
+                        user: data?.user,
+                        token: data?.token
 
                     }
                 ))
@@ -197,20 +187,25 @@ export default function Login() {
                 );
                 setFormdata(
                     {
-                     
+
                         email: "",
                         password: "",
                     }
                 )
-                // router.replace("/(auth)/verify-otp");
-            } else {
+                router.replace({
+                    pathname: "/(auth)/verify-otp",
+                    params: { email: formdata.email }
+                });
+            }else {
                 const msg =
-                    signupResponse?.data?.message ||
+                    data?.message ||
                     "Something went wrong. Try again.";
                 showToast("error", "Login failed failed", msg);
             }
-        } catch (error) {
-            console.log("error in login", error);
+        },
+        onError: (error) => {
+            setLoading(false)
+             console.log("error in login", error);
 
             // Common backend responses when user already exists
             const status = error?.response?.status;
@@ -235,9 +230,27 @@ export default function Login() {
                     backendMsg || "Unable to reach the server. Please try again."
                 );
             }
-        } finally {
-            setLoading(false);
+        },
+    });
+
+    // ---------- Signup ----------
+    const handelLogin = async () => {
+
+        const isEmailValid = validateField("email", formdata.email);
+        const isPasswordValid = validateField("password", formdata.password);
+
+        if (!isEmailValid || !isPasswordValid) {
+            showToast(
+                "error",
+                "Missing details",
+                "Please fix the highlighted fields before continuing."
+            );
+            return;
         }
+
+        loginMutation.mutate(formdata)
+
+      
     };
 
     // ---------- Error text component ----------
@@ -316,7 +329,7 @@ export default function Login() {
                     </View>
 
                     <View style={styles.formContainer}>
-                     
+
 
                         {/* EMAIL */}
                         <View style={styles.inputGroup}>

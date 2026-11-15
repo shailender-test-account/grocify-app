@@ -1,4 +1,5 @@
 import { Stack, useRouter, useSegments } from "expo-router";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import "../../global.css";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import SafeScreen from "../components/Safescreen";
@@ -18,6 +19,7 @@ function RootLayoutNav() {
   const dispatch = useDispatch();
   const router = useRouter();
   const segments = useSegments();
+ 
 
   const { token, isLoading } = useSelector((state) => state.auth);
   const [bootstrapped, setBootstrapped] = useState(false);
@@ -104,10 +106,13 @@ function RootLayoutNav() {
 
 // ✅ Provider wraps everything — that's where the store is set
 export default function RootLayout() {
+   const queryClient = new QueryClient();
 
   return (
+    <QueryClientProvider client={queryClient}>
     <Provider store={store}>
       <RootLayoutNav />
     </Provider>
+    </QueryClientProvider>
   );
 }

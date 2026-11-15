@@ -13,9 +13,12 @@ import {
   ScrollView,
 } from "react-native";
 import axiosClient from "../../api/axios.client.js";
+import { useLocalSearchParams } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import { useDispatch } from 'react-redux';
-import { setCredentials} from "../../store/slices/userslice.js";
+import { setCredentials } from "../../store/slices/userslice.js";
+import { useMutation } from "@tanstack/react-query";
+import { verifyOtpWithApi } from "../../api/authservice.js";
 
 const COLORS = {
   primary: "#4CAF50",
@@ -43,8 +46,11 @@ export default function OtpVerificationScreen({
   onVerify, // optional callback (code, response) => {}  fired after successful verify
   onResend, // async () => {}
 }) {
-  const Dispatch=useDispatch()
-  const [email, setEmail] = useState(initialEmail);
+
+  const params = useLocalSearchParams()
+  const Dispatch = useDispatch()
+  const [email, setEmail] = useState(params.email || initialEmail);
+ 
   const [emailError, setEmailError] = useState("");
   const [otp, setOtp] = useState(Array(OTP_LENGTH).fill(""));
   const [focusedIndex, setFocusedIndex] = useState(0);
@@ -186,26 +192,87 @@ export default function OtpVerificationScreen({
   };
 
   // Actual API call
-  const verifyOtpWithApi = async (code, emailValue) => {
+  // const verifyOtpWithApi = async (code, emailValue) => {
+
+  //   const response = await axiosClient.post("/auth/verify-otp", {
+  //     email: emailValue,
+  //     otp: code,
+  //   });
+
+
+  //   const data = response?.data ?? response ?? {};
+
+  //   const isSuccess = data?.success ?? true;
+  //   if (!isSuccess) {
+  //     const msg =
+  //       data?.message || data?.error || "Invalid OTP. Please try again.";
+  //     throw new Error(msg);
+  //   }
+
+  //   return response.data;
+  // };
+
+
+  const verifyotpMutation = useMutation({
+    mutationFn: verifyOtpWithApi,
+    onSuccess: (data) => {
     
-    const response = await axiosClient.post("/auth/verify-otp", {
-      email: emailValue,
-      otp: code,
-    });
+      if (data?.success) {
+        SecureStore.setItemAsync("accesstoken", data?.token);
+        Dispatch(setCredentials(
+          {
+            user: data?.user,
+            token: data?.token
+          }
+        ));
+        showAlert(
+          "success",
+          message || "OTP verified successfully! Welcome back."
+        );
+        setFormdata({
+          username: "",
+          email: "",
+          password: "",
+        });
 
-    // axiosClient usually returns the parsed data directly.
-    // Handle both axios-style (data.data) and direct data shapes.
-    const data = response?.data ?? response ?? {};
+        onVerify?.(code, { token, user, message, email: email.trim(), raw: data });
 
-    const isSuccess = data?.success ?? true;
-    if (!isSuccess) {
-      const msg =
-        data?.message || data?.error || "Invalid OTP. Please try again.";
-      throw new Error(msg);
-    }
 
-    return data;
-  };
+      } else {
+        const msg = data?.message || "Something went wrong. Try again.";
+        showToast("error", "Signup failed", msg);
+      }
+    },
+    onError: (error) => {
+      const msg = error?.message || "Something went wrong. Please try again.";
+      setError(msg);
+      showAlert("error", msg);
+      shake();
+      setOtp(Array(OTP_LENGTH).fill(""));
+      inputs.current[0]?.focus();
+      setLoading(false);
+
+      // if (status === 409 || /already|exist/i.test(backendMsg || "")) {
+      //   showToast(
+      //     "error",
+      //     "User already exists",
+      //     backendMsg || "An account with this email already exists. Try logging in."
+      //   );
+      // } else if (status === 400) {
+      //   showToast(
+      //     "error",
+      //     "Invalid details",
+      //     backendMsg || "Please check your information and try again."
+      //   );
+      // } else {
+      //   showToast(
+      //     "error",
+      //     "Network error",
+      //     backendMsg || "Unable to reach the server. Please try again."
+      //   );
+      // }
+    },
+  });
 
   const handleVerify = async () => {
     // Validate email first
@@ -231,41 +298,8 @@ export default function OtpVerificationScreen({
     setLoading(true);
     setError("");
 
-    try {
-      // call API
-      const data = await verifyOtpWithApi(code, email.trim());
+    verifyotpMutation.mutate({code, emailValue:email.trim()})
 
-
-      // Persist / pass along token + user
-      // (hook this into AsyncStorage / your auth context as needed)
-      const { token, user, message } = data;
-      await SecureStore.setItemAsync("accesstoken",token);
-      Dispatch(setCredentials(
-        {
-          user:user,
-          token:token
-        }
-      ));
-
-
-
-      showAlert(
-        "success",
-        message || "OTP verified successfully! Welcome back."
-      );
-
-      // bubble up to parent
-      onVerify?.(code, { token, user, message, email: email.trim(), raw: data });
-    } catch (err) {
-      const msg = err?.message || "Something went wrong. Please try again.";
-      setError(msg);
-      showAlert("error", msg);
-      shake();
-      setOtp(Array(OTP_LENGTH).fill(""));
-      inputs.current[0]?.focus();
-    } finally {
-      setLoading(false);
-    }
   };
 
   const handleResend = async () => {
@@ -402,7 +436,7 @@ export default function OtpVerificationScreen({
               <TextInput
                 ref={emailInputRef}
                 value={email}
-                onChangeText={handleEmailChange}
+                onChangeText={(text)=>handleEmailChange("email",email)}
                 onBlur={() => {
                   if (email.trim()) {
                     const err = validateEmail(email);
@@ -444,8 +478,8 @@ export default function OtpVerificationScreen({
                       borderColor: isFocused
                         ? COLORS.primary
                         : digit
-                        ? COLORS.primary
-                        : COLORS.border,
+                          ? COLORS.primary
+                          : COLORS.border,
                       backgroundColor: isFocused
                         ? COLORS.inputBackground
                         : COLORS.white,
@@ -742,3 +776,4 @@ const styles = StyleSheet.create({
     lineHeight: 17,
   },
 });
+

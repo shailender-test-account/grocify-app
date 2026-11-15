@@ -6,6 +6,7 @@ import { clearCredentials } from "../../store/slices/userslice.js";
 export default function Account() {
   const dispatch = useDispatch();
   const user = useSelector((state) => state.auth.user);
+  console.log("redux user is",user)
   
 
   const handleLogout = async () => {

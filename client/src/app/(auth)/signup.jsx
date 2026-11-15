@@ -1,7 +1,5 @@
 
 
-
-
 import {
     View,
     Text,
@@ -19,16 +17,28 @@ import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import COLORS from "../../constants/colors.js";
 import { useEffect, useRef, useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 
 import axiosClient from "../../api/axios.client.js";
-// import { useAuthStore } from "../../store/authStore";
+import { registerUser } from "../../api/authservice.js";
 
 const { width } = Dimensions.get("window");
 
+// ---------- API Function for Mutation ----------
+// const registerUser = async (formData) => {
+//     const response = await axiosClient.post("/auth/register", {
+//         ...formData,
+//         role: "customer",
+//     });
+//     return response.data;
+// };
+
+
+// signup function to hit api in signup
+
 export default function signup() {
-    const router = useRouter()
+    const router = useRouter();
     const [showPassword, setShowPassword] = useState(false);
-    const [loading, setLoading] = useState(false);
 
     const [formdata, setFormdata] = useState({
         email: "",
@@ -59,15 +69,12 @@ export default function signup() {
     const toastOpacity = useRef(new Animated.Value(0)).current;
     const toastTimer = useRef(null);
 
-
-
     // ---------- Toast helpers ----------
     const showToast = (type, title, message, duration = 3000) => {
         if (toastTimer.current) clearTimeout(toastTimer.current);
 
         setToast({ visible: true, type, title, message });
 
-        // Reset position, then spring down
         toastY.setValue(-150);
         toastOpacity.setValue(0);
 
@@ -126,8 +133,9 @@ export default function signup() {
         let message = "";
 
         if (!value.trim()) {
-            message = `${name.charAt(0).toUpperCase() + name.slice(1)
-                } is required`;
+            message = `${
+                name.charAt(0).toUpperCase() + name.slice(1)
+            } is required`;
         } else if (name === "email") {
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!emailRegex.test(value.trim())) {
@@ -160,53 +168,34 @@ export default function signup() {
         }
     };
 
-    // ---------- Signup ----------
-    const handelSignup = async () => {
-        const isUsernameValid = validateField("username", formdata.username);
-        const isEmailValid = validateField("email", formdata.email);
-        const isPasswordValid = validateField("password", formdata.password);
-
-        if (!isUsernameValid || !isEmailValid || !isPasswordValid) {
-            showToast(
-                "error",
-                "Missing details",
-                "Please fix the highlighted fields before continuing."
-            );
-            return;
-        }
-
-        try {
-            setLoading(true);
-
-            const signupResponse = await axiosClient.post("/auth/register", {
-                ...formdata,
-                role: "customer",
-            });
-
-            if (signupResponse?.data?.success) {
+    // ---------- TanStack React Query Mutation ----------
+    const signupMutation = useMutation({
+        mutationFn: registerUser,
+        onSuccess: (data) => {
+            if (data?.success) {
                 showToast(
                     "success",
                     "Account created 🎉",
                     "Welcome to Grocify! You can now log in."
                 );
-                setFormdata(
-                    {
-                        username: "",
-                        email: "",
-                        password: "",
-                    }
-                )
-                router.replace("/(auth)/verify-otp");
+                setFormdata({
+                    username: "",
+                    email: "",
+                    password: "",
+                });
+              
+                router.replace({
+                    pathname:"/(auth)/verify-otp",
+                    params:{email:formdata.email}
+                });
             } else {
-                const msg =
-                    signupResponse?.data?.message ||
-                    "Something went wrong. Try again.";
+                const msg = data?.message || "Something went wrong. Try again.";
                 showToast("error", "Signup failed", msg);
             }
-        } catch (error) {
+        },
+        onError: (error) => {
             console.log("error in register", error);
 
-            // Common backend responses when user already exists
             const status = error?.response?.status;
             const backendMsg = error?.response?.data?.message;
 
@@ -229,9 +218,24 @@ export default function signup() {
                     backendMsg || "Unable to reach the server. Please try again."
                 );
             }
-        } finally {
-            setLoading(false);
+        },
+    });
+
+    const handelSignup = () => {
+        const isUsernameValid = validateField("username", formdata.username);
+        const isEmailValid = validateField("email", formdata.email);
+        const isPasswordValid = validateField("password", formdata.password);
+
+        if (!isUsernameValid || !isEmailValid || !isPasswordValid) {
+            showToast(
+                "error",
+                "Missing details",
+                "Please fix the highlighted fields before continuing."
+            );
+            return;
         }
+
+        signupMutation.mutate(formdata);
     };
 
     // ---------- Error text component ----------
@@ -333,7 +337,7 @@ export default function signup() {
                                     onChangeText={(text) => handelChange("username", text)}
                                     onBlur={() => validateField("username", formdata.username)}
                                     autoCapitalize="none"
-                                    editable={!loading}
+                                    editable={!signupMutation.isPending}
                                 />
                             </View>
                             <ErrorMessage field="username" />
@@ -363,7 +367,7 @@ export default function signup() {
                                     onBlur={() => validateField("email", formdata.email)}
                                     keyboardType="email-address"
                                     autoCapitalize="none"
-                                    editable={!loading}
+                                    editable={!signupMutation.isPending}
                                 />
                             </View>
                             <ErrorMessage field="email" />
@@ -392,7 +396,7 @@ export default function signup() {
                                     onChangeText={(text) => handelChange("password", text)}
                                     onBlur={() => validateField("password", formdata.password)}
                                     secureTextEntry={!showPassword}
-                                    editable={!loading}
+                                    editable={!signupMutation.isPending}
                                 />
                                 <TouchableOpacity
                                     onPress={() => setShowPassword(!showPassword)}
@@ -410,12 +414,12 @@ export default function signup() {
 
                         {/* BUTTON */}
                         <TouchableOpacity
-                            style={[styles.button, loading && localStyles.buttonDisabled]}
+                            style={[styles.button, signupMutation.isPending && localStyles.buttonDisabled]}
                             onPress={handelSignup}
-                            disabled={loading}
+                            disabled={signupMutation.isPending}
                             activeOpacity={0.8}
                         >
-                            {loading ? (
+                            {signupMutation.isPending ? (
                                 <View style={localStyles.loaderRow}>
                                     <ActivityIndicator size="small" color="#fff" />
                                     <Text style={localStyles.loaderText}>
