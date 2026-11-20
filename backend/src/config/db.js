@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 export const dbConnect=async()=>{
     try {
 
-        console.log(process.env.MONGO_URI)
+        
 
         const conn=await mongoose.connect(process.env.MONGO_URI,{
             maxPoolSize: 10,
